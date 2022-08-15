@@ -1,0 +1,50 @@
+startJob:
+  handler: resolvers/job/startJob.handler
+  name: ${opt:stage}-startJob
+  timeout: 600
+  role: LambdaRole
+  description: Lambda function to start the media convert job
+  environment:
+    VIDEO_STATUS_TABLE: ${file(./env.yml):${opt:stage}.VIDEO_STATUS_TABLE}
+    MEDIA_INPUT_BUCKET: ${file(./env.yml):${opt:stage}.MEDIA_INPUT_BUCKET}
+    MEDIA_OUTPUT_BUCKET: ${file(./env.yml):${opt:stage}.MEDIA_OUTPUT_BUCKET}
+    MEDIA_ENDPOINT: ${file(./env.yml):${opt:stage}.MEDIA_ENDPOINT}
+    REGION: ${file(./env.yml):${opt:stage}.REGION}
+    MEDIA_CONVERT_ROLE: ${file(./env.yml):${opt:stage}.MEDIA_CONVERT_ROLE}
+  events:
+      - s3:
+          bucket: ${file(./env.yml):${opt:stage}.MEDIA_INPUT_BUCKET}
+          event: s3:ObjectCreated:*
+          existing: true
+
+getSignedUrl:
+  handler: resolvers/getSignedUrl.handler
+  name: ${opt:stage}-getSignedUrl
+  timeout: 600
+  role: LambdaRole
+  description: Lambda function to get the signed url to upload the video
+  environment:
+    MEDIA_INPUT_BUCKET: ${file(./env.yml):${opt:stage}.MEDIA_INPUT_BUCKET}
+  events:
+      - http:
+          path: getSignedUrl
+          method: post
+          cors: true
+
+
+updateJobStatus:
+  handler: resolvers/job/updateJobStatus.handler
+  name: ${opt:stage}-updateJobStatus
+  timeout: 600
+  role: LambdaRole
+  description: Lambda function to update the media convert job status in the DB
+  environment:
+    VIDEO_STATUS_TABLE: ${file(./env.yml):${opt:stage}.VIDEO_STATUS_TABLE}
+    REGION: ${file(./env.yml):${opt:stage}.REGION}
+  events:
+      - cloudwatchEvent:
+          event:
+            source:
+              - 'aws.mediaconvert'
+            detail-type:
+              - 'MediaConvert Job State Change'

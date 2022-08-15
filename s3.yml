@@ -1,0 +1,20 @@
+Resources:
+    MediaInputBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        CorsConfiguration:
+          CorsRules:
+            - AllowedHeaders: ["*"]
+              AllowedMethods: [GET, PUT, POST]
+              AllowedOrigins: ["*"]
+
+
+    MediaOutputBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        CorsConfiguration:
+          CorsRules:
+            - AllowedHeaders: ["*"]
+              AllowedMethods: [GET, PUT, POST]
+              AllowedOrigins: ["*"]
+        AccessControl: PublicRead

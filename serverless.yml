@@ -1,0 +1,17 @@
+service: video-transcoding-pipeline
+
+provider:
+  name: aws
+  region: ${file(./env.yml):${opt:stage}.REGION}
+  runtime: nodejs14.x
+  versionFunctions: false
+  tracing:
+    lambda: true
+
+functions:
+  - ${file(./lambdaFunctions.yml)}
+
+resources:
+    - ${file(./permissions.yml)}
+    - ${file(./db.yml)}
+    - ${file(./s3.yml)}

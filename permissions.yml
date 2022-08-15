@@ -1,0 +1,88 @@
+Resources:
+  LambdaRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: "LambdaRole-${opt:stage}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: "sts:AssumeRole"
+      Policies:
+        - PolicyName: "LambdaRolePolicy-${opt:stage}"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - "dynamodb:PutItem"
+                  - "dynamodb:UpdateItem"
+                  - "mediaconvert:*"
+                Effect: Allow
+                Resource: "*"
+
+        - PolicyName: "MediaConvertLambdaPolicy-${opt:stage}"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: PassRole
+                Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource: !GetAtt MediaConvertRole.Arn
+              - Sid: MediaConvertService
+                Effect: Allow
+                Action:
+                  - "mediaconvert:*"
+                Resource:
+                  - "*"
+              - Sid: MediaInputBucket
+                Effect: Allow
+                Action:
+                  - "s3:*"
+                Resource: 
+                  - "*"
+
+        - PolicyName: "CloudWatchLogsPolicy-${opt:stage}"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Effect: Allow
+                Resource:
+                  - >-
+                    arn:aws:logs:${file(./env.yml):${opt:stage}.REGION}:${file(./env.yml):${opt:stage}.ACCOUNT_ID}:*
+
+  MediaConvertRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: "MediaConvertRole-${opt:stage}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "mediaconvert.amazonaws.com"
+                - "mediaconvert.us-east-2.amazonaws.com"
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: "MediaConvertPolicy"
+          PolicyDocument:
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "s3:*"
+                Resource:
+                  - "*"
+              - Effect: "Allow"
+                Action:
+                  - "cloudwatch:*"
+                  - "logs:*"
+                Resource:
+                  - "*"
